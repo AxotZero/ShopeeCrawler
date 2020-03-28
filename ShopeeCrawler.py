@@ -100,7 +100,7 @@ class ShopeeCrawler():
         print('product info:')
         print('product_name:', product_name)
         print('pricies:\t', [p.contents[0] for p in prices])
-        print('rating:\t', rating.contents[0])
+        print('rating:\t\t', rating.contents[0])
         print('comments_num:\t', comments_num[1].contents[0])
         print('sold_num:\t', sold_num[0].contents[0])
         print('style_num:\t', style_num)
@@ -108,12 +108,12 @@ class ShopeeCrawler():
         print('description_len:', description_len)
         
         try: 
-            print('transport_free:', transport_free[0].contents)
+            print('transport_free:', transport_free[0].contents[0])
         except:
             print('transport_free:\t None')
         
         try:
-            print('seller_name:\t', seller_name.contents)
+            print('seller_name:\t', seller_name.contents[0])
         except:
             print('seller_name:\t None')
         
@@ -185,7 +185,7 @@ class ShopeeCrawler():
         
         products_name = []
         for page in range(start_page, end_page + 1):
-        
+            print('searching page:', page)
             url = self.base_url + 'search?keyword={keyword}&page={page}&sortBy=relevancy'
             
             r = requests.get(url, headers=self.headers)
@@ -194,7 +194,7 @@ class ShopeeCrawler():
             all_items = soup.find_all("div", class_="col-xs-2-4 shopee-search-item-result__item")
             for item in all_items:
                 products_name.append(item.find('a').get('href'))
-        
+            
         return products_name
         
 
@@ -205,9 +205,17 @@ if __name__ == "__main__":
     
     # debug
     shopee_crapper = ShopeeCrawler(driver_path='', sleep_time=0)
+    products_name = shopee_crapper.get_search_page_products_name('男生衣著', 0, 10)
+    print('len(products_name)', len(products_name))
+    
+    # 
     shopee_crapper.get_product_info('/🔥任選5件680🔥高品質潮T-純棉圓領短袖T恤-FILA-印花T恤-男裝-大尺碼短T-大尺寸男T-現貨出售-i.199006536.7417997413')
     shopee_crapper.get_seller_info('dssss455eeds5')
     
+    # test driver
+    shopee_crapper = ShopeeCrawler(driver_path='./chromedriver.exe', sleep_time=3)
+    shopee_crapper.get_product_info('/🔥任選5件680🔥高品質潮T-純棉圓領短袖T恤-FILA-印花T恤-男裝-大尺碼短T-大尺寸男T-現貨出售-i.199006536.7417997413')
+
     del shopee_crapper
 
 
