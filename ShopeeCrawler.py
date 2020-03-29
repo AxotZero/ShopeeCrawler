@@ -2,20 +2,20 @@
 """
 Created on Sat Mar 28 18:30:51 2020
 
-@author: asdsw
+@author: axot
 """
 
-import requests
 import time
+import argparse
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
-import argparse
+import requests
 
 
 def parse_args(cmd=''):
     
     parser = argparse.ArgumentParser()
-    # parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-dp', '--driver_path', type=str, default='',
                         help='your driver path')
     parser.add_argument('-t', '--sleep_time', type=float, default=0,
@@ -37,6 +37,8 @@ class ShopeeCrawler():
             'User-Agent': 'Googlebot',
             'From': 'YOUR EMAIL ADDRESS'
         }
+        self.number_filter = '0123456789.'
+        
         
         # check if we want to use webdriver to get html after js render
         if driver_path != '':
@@ -45,9 +47,13 @@ class ShopeeCrawler():
             self.driver = None
         self.sleep_time = sleep_time
         
+        
     def __del__(self):
         if self.driver is not None:
             self.driver.close()
+            
+    def get_float_number(self, text):
+        return float(''.join(filter(lambda ch: ch in self.number_filter, text)))
         
     def get_product_info(self, product_name):
         '''
@@ -78,13 +84,17 @@ class ShopeeCrawler():
         
         product_info = soup.find("div", class_="flex flex-auto k-mj2F")
         
-        prices = product_info.find_all("div", class_="_3n5NQx")
+        # get average price
+        prices = product_info.find("div", class_="_3n5NQx").contents[0].split('-')
+        prices = [self.get_float_number(p) for p in prices]
+        avg_price = sum(prices) / len(prices)
         
-        rating = product_info.find("div", class_="_3Oj5_n _2z6cUg")
         
-        comments_num = product_info.find_all("div", class_="_3Oj5_n")
+        rating = float(product_info.find("div", class_="_3Oj5_n _2z6cUg").contents[0])
         
-        sold_num = product_info.find_all("div", class_="_22sp0A") 
+        comments_num = float(product_info.find_all("div", class_="_3Oj5_n")[1].contents[0])
+        
+        sold_num = float(product_info.find("div", class_="_22sp0A").contents[0])
         
         style_num = len(product_info.find_all("div", class_="flex items-center crl7WW")[0].find_all("button"))
         
@@ -92,30 +102,29 @@ class ShopeeCrawler():
         
         description_len = len(soup.find("div", class_="_2u0jt9").find('span').contents[0])
         
-        transport_free = product_info.find_all("div", class_="_2mwtMq")
+        try:
+            transport_free = self.get_float_number(product_info.find("div", class_="_2mwtMq").contents[0])
+        except:
+            transport_free = None
         
-        seller_name = soup.find("div", class_="_3Lybjn")
+        try:
+            seller_name = soup.find("div", class_="_3Lybjn").contents[0]
+        except:
+            seller_name = None
         
         print('=' * 50)
         print('product info:')
         print('product_name:', product_name)
-        print('pricies:\t', [p.contents[0] for p in prices])
-        print('rating:\t\t', rating.contents[0])
-        print('comments_num:\t', comments_num[1].contents[0])
-        print('sold_num:\t', sold_num[0].contents[0])
+        print('pricies:\t', avg_price)
+        print('rating:\t\t', rating)
+        print('comments_num:\t', comments_num)
+        print('sold_num:\t', sold_num)
         print('style_num:\t', style_num)
         print('img_num:\t', img_num)
         print('description_len:', description_len)
+        print('transport_free: ', transport_free)
+        print('seller_name:\t', seller_name)
         
-        try: 
-            print('transport_free:', transport_free[0].contents[0])
-        except:
-            print('transport_free:\t None')
-        
-        try:
-            print('seller_name:\t', seller_name.contents[0])
-        except:
-            print('seller_name:\t None')
         
     def get_seller_info(self, seller_name):
         '''
@@ -141,13 +150,15 @@ class ShopeeCrawler():
         seller_info = [item.contents[0] 
                        for item in seller_page.find_all("div", class_="section-seller-overview__item-text-value")]
         
-        product_num = seller_info[0]
-        watching = seller_info[2]
-        response_rating = seller_info[4]
-        canceled_rate = seller_info[6]
-        follower_num = seller_info[8]
-        comment_info = seller_info[10]
-        attend_time = seller_info[-1]
+        product_num = float(seller_info[0])
+        watching = float(seller_info[2])
+        response_rating = self.get_float_number(seller_info[4]) * 0.01
+        canceled_rate = self.get_float_number(seller_info[6]) * 0.01
+        follower_num = float(seller_info[8])
+        comment_info = seller_info[10].split(' ')
+        comment_rating = float(comment_info[0])
+        comment_num = self.get_float_number(comment_info[1])
+        # attend_time = seller_info[-1]
         
         print('=' * 50)
         print('seller info:')
@@ -157,8 +168,9 @@ class ShopeeCrawler():
         print('response_rating:', response_rating)
         print('canceled_rate:\t', canceled_rate)
         print('follower_num:\t', follower_num)
-        print('comment_info:\t', comment_info)
-        print('attend_time:\t', attend_time)
+        print('comment_rating:\t', comment_rating)
+        print('comment_num:\t', comment_num)
+        # print('attend_time:\t', attend_time)
                 
     def get_search_page_products_name(self, keyword, start_page=0, end_page=0):
         '''
@@ -205,11 +217,11 @@ if __name__ == "__main__":
     
     # debug
     shopee_crapper = ShopeeCrawler(driver_path='', sleep_time=0)
-    products_name = shopee_crapper.get_search_page_products_name('男生衣著', 0, 10)
-    print('len(products_name)', len(products_name))
+    # products_name = shopee_crapper.get_search_page_products_name('男生衣著', 0, 10)
+    # print('len(products_name)', len(products_name))
     
     # 
-    shopee_crapper.get_product_info('/🔥任選5件680🔥高品質潮T-純棉圓領短袖T恤-FILA-印花T恤-男裝-大尺碼短T-大尺寸男T-現貨出售-i.199006536.7417997413')
+    shopee_crapper.get_product_info('2019AW-CHING-G-SQUAD-X-tnt.-CGS-Forever-Fullprint-suits-i.14893845.4506451184')
     shopee_crapper.get_seller_info('dssss455eeds5')
     
     # test driver
