@@ -182,7 +182,7 @@ class ShopeeCrawler():
             return [None] * 7
         
         # get html
-        url = self.base_url + seller_name
+        url = self.base_url + str(seller_name)
         pageSource = requests.get(url, headers=self.headers).text
         soup = BeautifulSoup(pageSource, 'lxml')
         
@@ -313,7 +313,7 @@ class ShopeeCrawler():
         seller_info_column = ['product_num', 'watching', 'response_rating', 'canceled_rate', 
                               'follower_num','comment_rating', 'comment_num']
         sellers_name_list = csv['seller_name']
-        seller_infos = shopee_crapper.get_seller_infos(sellers_name_list)
+        seller_infos = self.get_seller_infos(sellers_name_list)
         
         
         # match seller_info by product_info[seller_name]
