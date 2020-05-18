@@ -1,17 +1,17 @@
 # ShopeeCrawler
+This project is to get product information data from Shoppee Search by chrome driver.
+
+![](https://i.imgur.com/1FW4ASh.png)
+
+The feature you can get is shown below
 
 ## arguments
-
-
 | argument | default | description |
 | -------- | -------- | -------- |
 | -dp, --driver_path     | ''     | path to your chrome driver     |
 | -t, --sleep_time     |  0    |  sleep_time after your driver get info    |
 | -k, --keyword     | None     | search keyword     |
 | -p, --pages     | [0, 0]     | your start page and end page     |
-
-
-
 
 
 ## column_name
@@ -36,13 +36,5 @@
 | follower_num     | 追蹤者人數     | 
 | comment_rating     | 賣家評價分數     | 
 | comment_num     | 賣家評分人數     | 
-
-
-
-
-
-
-
-
 
 
